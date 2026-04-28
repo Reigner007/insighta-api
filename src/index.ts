@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
+import { csrfProtection } from "./middleware/csrf";
 import profileRoutes from "./routes/profiles";
 import authRoutes from "./routes/auth";
 import { apiRateLimiter } from "./middleware/rateLimiter";
@@ -17,6 +18,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(csrfProtection);
 app.use(morgan(":method :url :status :response-time ms"));
 
 // Health check
