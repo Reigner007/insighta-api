@@ -1,16 +1,23 @@
+import "./env";
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
 import profileRoutes from "./routes/profiles";
-
-dotenv.config();
+import authRoutes from "./routes/auth";
+import { apiRateLimiter } from "./middleware/rateLimiter";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors({ origin: "*" }));
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "*",
+  credentials: true,
+}));
 app.use(express.json());
+app.use(cookieParser());
+app.use(morgan(":method :url :status :response-time ms"));
 
 // Health check
 app.get("/", (_req, res) => {
@@ -22,7 +29,8 @@ app.get("/", (_req, res) => {
 });
 
 // Routes
-app.use("/api/profiles", profileRoutes);
+app.use("/auth", authRoutes);
+app.use("/api/profiles", apiRateLimiter, profileRoutes);
 
 // 404 handler
 app.use((_req, res) => {
@@ -30,17 +38,10 @@ app.use((_req, res) => {
 });
 
 // Global error handler
-app.use(
-  (
-    err: Error,
-    _req: express.Request,
-    res: express.Response,
-    _next: express.NextFunction
-  ) => {
-    console.error(err.stack);
-    res.status(500).json({ status: "error", message: "Internal server error" });
-  }
-);
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error(err.stack);
+  res.status(500).json({ status: "error", message: "Internal server error" });
+});
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
