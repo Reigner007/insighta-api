@@ -5,6 +5,7 @@ export const authRateLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
   handler: (_req, res) => {
     res.status(429).json({
       status: "error",
@@ -16,6 +17,7 @@ export const authRateLimiter = rateLimit({
 export const apiRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 60,
+  validate: { xForwardedForHeader: false },
   keyGenerator: (req) => {
     const authReq = req as any;
     return authReq.user?.userId || ipKeyGenerator(req);

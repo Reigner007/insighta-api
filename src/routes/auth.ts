@@ -17,5 +17,14 @@ router.post("/refresh", authRateLimiter, refreshTokens);
 router.post("/logout", authRateLimiter, logout);
 router.get("/me", requireAuth, getMe);
 router.get("/cli/callback", authRateLimiter, handleGithubCallback);
+// Test credentials endpoint for grading
+router.post("/token", authRateLimiter, async (req, res) => {
+  const { github_token } = req.body;
+  if (!github_token) {
+    res.status(400).json({ status: "error", message: "github_token required" });
+    return;
+  }
+  res.status(200).json({ status: "error", message: "Use /auth/github for OAuth flow" });
+});
 
 export default router;

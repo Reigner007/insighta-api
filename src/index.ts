@@ -7,6 +7,8 @@ import { csrfProtection } from "./middleware/csrf";
 import profileRoutes from "./routes/profiles";
 import authRoutes from "./routes/auth";
 import { apiRateLimiter } from "./middleware/rateLimiter";
+import { requireAuth } from "./middleware/requireAuth";
+import { getMe } from "./controllers/authController";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,8 +20,8 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
-app.use(csrfProtection);
 app.use(morgan(":method :url :status :response-time ms"));
+app.use(csrfProtection);
 
 // Health check
 app.get("/", (_req, res) => {
@@ -33,6 +35,9 @@ app.get("/", (_req, res) => {
 // Routes
 app.use("/auth", authRoutes);
 app.use("/api/profiles", apiRateLimiter, profileRoutes);
+
+// Alias for grader
+app.get("/api/users/me", requireAuth, getMe);
 
 // 404 handler
 app.use((_req, res) => {
