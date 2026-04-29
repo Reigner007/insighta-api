@@ -7,15 +7,15 @@ const prisma = new PrismaClient();
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET!;
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!;
 
-// Access token — 15 minutes
+// Access token — 24 hrs for testing
 export function generateAccessToken(userId: string, role: string): string {
-  return jwt.sign({ userId, role }, ACCESS_SECRET, { expiresIn: "15m" });
+  return jwt.sign({ userId, role }, ACCESS_SECRET, { expiresIn: "24h" });
 }
 
 // Refresh token — 5 minutes
 export async function generateRefreshToken(userId: string): Promise<string> {
   const token = uuidv7();
-  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days for testing
 
   await prisma.refreshToken.create({
     data: {
