@@ -59,3 +59,15 @@ model RefreshToken {
 
   @@map("refresh_tokens")
 }
+
+model RateLimit {
+  id         String   @id
+  key        String
+  created_at DateTime @default(now())
+  expires_at DateTime
+
+  @@index([key])
+  @@index([expires_at])
+
+  @@map("rate_limits")
+}
