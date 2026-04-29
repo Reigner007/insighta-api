@@ -5,14 +5,20 @@ export function csrfProtection(
   res: Response,
   next: NextFunction
 ): void {
-  // Only check state-changing requests
+  // Only check state-changing requests on web portal routes
   if (!["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
     next();
     return;
   }
 
-  // Skip CSRF for auth endpoints and CLI requests
+  // Skip CSRF for auth endpoints
   if (req.path.startsWith("/auth/")) {
+    next();
+    return;
+  }
+
+  // Skip CSRF for API endpoints (handled by JWT auth instead)
+  if (req.path.startsWith("/api/")) {
     next();
     return;
   }
@@ -27,8 +33,5 @@ export function csrfProtection(
     return;
   }
 
-  // Token exists — accept it (stateless CSRF protection)
-  // The double-submit cookie pattern is enforced by requiring
-  // the token to be present in both header and generated client-side
   next();
 }
