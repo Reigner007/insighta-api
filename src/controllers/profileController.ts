@@ -254,20 +254,18 @@ function buildQueryString(
   query: Record<string, unknown>,
   exclude: string[] = []
 ): string {
-  return Object.entries(query)
-    .filter(([key]) => !exclude.includes(key))
-    .map(([key, val]) => {
-      let strVal: string;
-      if (Array.isArray(val)) {
-        strVal = String(val[0] ?? "");
-      } else if (val === null || val === undefined) {
-        strVal = "";
-      } else {
-        strVal = String(val);
-      }
-      return `${key}=${encodeURIComponent(strVal)}`;
-    })
-    .join("&");
+  const result: string[] = [];
+  for (const [key, val] of Object.entries(query)) {
+    if (exclude.includes(key)) continue;
+    if (val === undefined || val === null) continue;
+    const strVal = Array.isArray(val)
+      ? String(val[0] ?? "")
+      : typeof val === "object"
+      ? JSON.stringify(val)
+      : String(val);
+    result.push(`${key}=${encodeURIComponent(strVal)}`);
+  }
+  return result.join("&");
 }
 
 function buildWhereClause(query: Record<string, unknown>): Prisma.ProfileWhereInput {
