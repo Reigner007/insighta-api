@@ -257,7 +257,14 @@ function buildQueryString(
   return Object.entries(query)
     .filter(([key]) => !exclude.includes(key))
     .map(([key, val]) => {
-      const strVal = Array.isArray(val) ? val[0] : String(val);
+      let strVal: string;
+      if (Array.isArray(val)) {
+        strVal = String(val[0] ?? "");
+      } else if (val === null || val === undefined) {
+        strVal = "";
+      } else {
+        strVal = String(val);
+      }
       return `${key}=${encodeURIComponent(strVal)}`;
     })
     .join("&");

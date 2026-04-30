@@ -13,7 +13,15 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
       - run: npm install
       - run: npx prisma generate
       - run: npm run build
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test
+          GITHUB_CLIENT_ID: test
+          GITHUB_CLIENT_SECRET: test
+          GITHUB_CALLBACK_URL: http://localhost:3000/auth/github/callback
+          JWT_ACCESS_SECRET: testsecret
+          JWT_REFRESH_SECRET: testsecret
+          FRONTEND_URL: http://localhost:3001
