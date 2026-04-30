@@ -256,7 +256,10 @@ function buildQueryString(
 ): string {
   return Object.entries(query)
     .filter(([key]) => !exclude.includes(key))
-    .map(([key, val]) => `${key}=${encodeURIComponent(String(val))}`)
+    .map(([key, val]) => {
+      const strVal = Array.isArray(val) ? val[0] : String(val);
+      return `${key}=${encodeURIComponent(strVal)}`;
+    })
     .join("&");
 }
 
