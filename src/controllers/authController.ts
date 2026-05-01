@@ -22,6 +22,8 @@ const pendingAuth = new Map<string, { codeVerifier?: string; expiresAt: number }
 
 // ── GET /auth/github ──────────────────────────────────────────────────────────
 export function redirectToGithub(req: Request, res: Response): void {
+  console.log("CALLBACK URL:", process.env.GITHUB_CALLBACK_URL);
+  console.log("CLIENT ID:", process.env.GITHUB_CLIENT_ID);
   const state = crypto.randomBytes(16).toString("hex");
   const codeChallenge = req.query.code_challenge as string | undefined;
   const codeChallengeMethod = req.query.code_challenge_method as string | undefined;
@@ -187,19 +189,19 @@ export async function handleGithubCallback(req: Request, res: Response): Promise
     }
 
     // Web flow — HTTP-only cookies + redirect
-    res.cookie("access_token", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 3 * 60 * 1000,
-    });
+res.cookie("access_token", accessToken, {
+  httpOnly: true,
+  secure: false, // false for localhost
+  sameSite: "lax",
+  maxAge: 24 * 60 * 60 * 1000, // 24 hours for local testing
+});
 
-    res.cookie("refresh_token", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 5 * 60 * 1000,
-    });
+res.cookie("refresh_token", refreshToken, {
+  httpOnly: true,
+  secure: false, // false for localhost
+  sameSite: "lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days for local testing
+});
 
     res.redirect(`${FRONTEND_URL}/dashboard`);
 
